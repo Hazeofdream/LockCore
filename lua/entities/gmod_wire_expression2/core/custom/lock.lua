@@ -7,7 +7,6 @@ E2Lib.RegisterExtension("LockCore", true, "Allows E2 chips to create, remove and
 LFS_CustomEntities = LFS_CustomEntities or {}
 
 util.AddNetworkString("LFS_CustomEntities_Update")
-util.AddNetworkString("LFS_CustomEntities_ForceUnlock")
 
 local function Broadcast()
     net.Start("LFS_CustomEntities_Update")
@@ -25,18 +24,6 @@ local function ForceUnlocks()
                 wep:SetLockOn(NULL)
            end
         end
-    end
-end
-
--- Call this to tell clients to block `ent` from being re-locked
-local function Server_NotifyForceUnlock(ent, targetPlayer)
-    if not IsValid(ent) then return end
-    net.Start("LFS_CustomEntities_ForceUnlock")
-    net.WriteEntity(ent)
-    if IsValid(targetPlayer) then
-        net.Send(targetPlayer)
-    else
-        net.Broadcast()
     end
 end
 
@@ -79,7 +66,6 @@ hook.Add("EntityRemoved", "LFS_CustomStorage_Cleanup", function(ent)
     for i, e in pairs(LFS_CustomEntities) do
         if e == ent then
             table.remove(LFS_CustomEntities, i)
-            Server_NotifyForceUnlock(e)
             break
         end
     end
@@ -106,7 +92,6 @@ e2function entity entity:setLockState(number state)
         local key = table.KeyFromValue(LFS_CustomEntities, this)
         if key then
             table.remove(LFS_CustomEntities, key)
-            Server_NotifyForceUnlock(this)
         end
     end
 
@@ -130,7 +115,6 @@ e2function entity setLockState(entity ent, number state)
         local key = table.KeyFromValue(LFS_CustomEntities, this)
         if key then
             table.remove(LFS_CustomEntities, key)
-            Server_NotifyForceUnlock(ent)
         end
     end
 
@@ -159,7 +143,7 @@ e2function array entity:isLocked()
     if not IsValid(this) then return self:throw("Invalid entity!", nil) end
 
     local targetingPlayers = {}
-    for _, ply in ipairs(player.GetAll()) do
+    for index, ply in pairs(player.GetAll()) do
         local wep = ply:GetActiveWeapon()
         if IsValid(wep) and wep:GetClass() == "weapon_lfsmissilelauncher" then
             if wep:GetClosestEnt() == this and wep:GetIsLocked() then
