@@ -14,19 +14,6 @@ local function Broadcast()
     net.Broadcast()
 end
 
-local function ForceUnlocks()
-    -- Forcefully cut lock for any launcher currently locked on this entity
-    for _, ply in pairs(player.GetAll()) do
-        local wep = ply:GetActiveWeapon()
-        if IsValid(wep) and wep.ClosestEnt == ent and wep:GetClass() == "weapon_lfsmissilelauncher" then
-           wep:StopSounds()
-           if wep:GetIsLocked() then
-                wep:SetLockOn(NULL)
-           end
-        end
-    end
-end
-
 -- Send all entities to client's launchers to be mocked
 hook.Add("Think", "LFS_CustomStorage_Inject", function()
     for _, ply in ipairs(player.GetAll()) do
